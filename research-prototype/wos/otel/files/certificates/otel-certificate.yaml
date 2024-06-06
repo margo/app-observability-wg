@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/instance: otel-collector
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/version: 0.96.0
+  name: otel-certificate
+  namespace: otel
+spec:
+  commonName: "OTEL Collector Certificate"
+  duration: 8760h
+  renewBefore: 360h
+  dnsNames:
+    - wos
+    - wos.local
+  secretName: otel-certificate-secret
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+  issuerRef:
+    name: otel-ca-issuer
+    kind: Issuer
+    group: cert-manager.io

@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: otel-collector
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/version: 0.96.0
+  name: otel-collector-opentelemetry-collector
+  namespace: otel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: otel-collector
+      app.kubernetes.io/name: opentelemetry-collector
+      component: standalone-collector
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 806f7671395c2ffd52aa4d89ff26ba602cb79bd5a8132d8d3f4a52abd0430eb3
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/instance: otel-collector
+        app.kubernetes.io/name: opentelemetry-collector
+        component: standalone-collector
+    spec:
+      containers:
+      - command:
+        - /otelcol-contrib
+        - --config=/conf/relay.yaml
+        env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: GOMEMLIMIT
+          value: 320MiB
+        image: otel/opentelemetry-collector-contrib:0.96.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 13133
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: opentelemetry-collector
+        ports:
+        - containerPort: 6831
+          name: jaeger-compact
+          protocol: UDP
+        - containerPort: 14250
+          name: jaeger-grpc
+          protocol: TCP
+        - containerPort: 14268
+          name: jaeger-thrift
+          protocol: TCP
+        - containerPort: 4317
+          name: otlp
+          protocol: TCP
+        - containerPort: 4318
+          name: otlp-http
+          protocol: TCP
+        - containerPort: 9411
+          name: zipkin
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 13133
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 400Mi
+        volumeMounts:
+        - mountPath: /conf
+          name: opentelemetry-collector-configmap
+        - mountPath: /certs
+          name: otel-certificate-secret
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      serviceAccount: otel-collector-opentelemetry-collector
+      serviceAccountName: otel-collector-opentelemetry-collector
+      volumes:
+        - name: otel-certificate-secret
+          secret:
+            secretName: otel-certificate-secret
+        - name: opentelemetry-collector-configmap 
+          configMap:
+            name: otel-collector-opentelemetry-collector
+            defaultMode: 420
+            items:
+            - key: relay
+              path: relay.yaml
+                
