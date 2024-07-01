@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/instance: otel-collector
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/version: 0.96.0
+  name: otel-selfsigned-ca
+  namespace: otel
+spec:
+  isCA: true
+  commonName: "OTEL Root CA"
+  duration: 26280h
+  renewBefore: 360h
+  secretName: otel-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: otel-ca-cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
