@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/instance: otel-collector
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/version: 0.96.0
+  name: otel-ca-issuer
+  namespace: otel
+spec:
+  ca:
+    secretName: otel-ca-secret
